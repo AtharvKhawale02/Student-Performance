@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-gray-800 p-8 rounded-lg shadow-lg mt-12">
+    <h2 class="text-2xl font-bold text-blue-400 text-center mb-6">Login</h2>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+            Login
+        </button>
+    </form>
+    <p class="text-gray-400 text-center mt-4">
+        Don't have an account? 
+        <a href="{% url 'authentication:register' %}" class="text-blue-400 hover:text-blue-600 transition duration-300">Register here</a>.
+    </p>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Dashboard Header -->
+    <h2 class="text-3xl font-bold text-blue-400 mb-6">Student Performance Dashboard</h2>
+    <p class="text-gray-400 mb-8">Analyze and predict student performance with real-time insights.</p>
+
+    <!-- Prediction Form -->
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+        <h3 class="text-xl font-semibold text-blue-400 mb-4">Predict Performance</h3>
+        <form method="post" action="{% url 'dashboard:predict' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="student_id" class="block text-gray-400">Select Student</label>
+                <select name="student_id" id="student_id" class="w-full p-2 rounded-lg bg-gray-700 text-white" required>
+                    <option value="" disabled selected>Select a student</option>
+                    {% for student in students %}
+                    <option value="{{ student.id }}">{{ student.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
+                Predict Performance
+            </button>
+        </form>
+    </div>
+
+    <!-- Student Table -->
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-semibold text-blue-400 mb-4">Student Data</h3>
+        {% if students %}
+        <table class="w-full text-left text-gray-400 border-collapse">
+            <thead>
+                <tr class="bg-gray-700">
+                    <th class="border-b border-gray-600 p-2">Name</th>
+                    <th class="border-b border-gray-600 p-2">Attendance</th>
+                    <th class="border-b border-gray-600 p-2">Test Scores</th>
+                    <th class="border-b border-gray-600 p-2">Assignments</th>
+                    <th class="border-b border-gray-600 p-2">Predicted Performance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr class="hover:bg-gray-800">
+                    <td class="border-b border-gray-600 p-2">{{ student.name }}</td>
+                    <td class="border-b border-gray-600 p-2">{{ student.attendance }}</td>
+                    <td class="border-b border-gray-600 p-2">{{ student.test_scores }}</td>
+                    <td class="border-b border-gray-600 p-2">{{ student.assignments }}</td>
+                    <td class="border-b border-gray-600 p-2">
+                        {% if student.performance_prediction %}
+                        {{ student.performance_prediction|floatformat:2 }}
+                        {% else %}
+                        <span class="text-gray-500">Not Predicted</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-gray-400">No students available. Please add student data.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
