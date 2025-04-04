@@ -3,64 +3,443 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <!-- Dashboard Header -->
-    <h2 class="text-3xl font-bold text-blue-400 mb-6">Student Performance Dashboard</h2>
-    <p class="text-gray-400 mb-8">Analyze and predict student performance with real-time insights.</p>
-
-    <!-- Prediction Form -->
-    <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-        <h3 class="text-xl font-semibold text-blue-400 mb-4">Predict Performance</h3>
-        <form method="post" action="{% url 'dashboard:predict' %}" class="space-y-4">
-            {% csrf_token %}
-            <div>
-                <label for="student_id" class="block text-gray-400">Select Student</label>
-                <select name="student_id" id="student_id" class="w-full p-2 rounded-lg bg-gray-700 text-white" required>
-                    <option value="" disabled selected>Select a student</option>
-                    {% for student in students %}
-                    <option value="{{ student.id }}">{{ student.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
-                Predict Performance
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">Student Performance Dashboard</h2>
+            <p class="text-gray-400">Analyze and predict student performance with AI-powered insights</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex space-x-2">
+            <button class="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105">
+                <i class="fas fa-download mr-2"></i> Export Data
             </button>
-        </form>
+            <button class="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105">
+                <i class="fas fa-cog mr-2"></i> Settings
+            </button>
+        </div>
     </div>
 
-    <!-- Student Table -->
-    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-semibold text-blue-400 mb-4">Student Data</h3>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-gradient-to-br from-blue-900 to-blue-800 p-6 rounded-xl shadow-lg border border-blue-800 hover:border-blue-500 transition-all duration-300">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-blue-300 text-sm font-medium">Total Students</p>
+                    <h3 class="text-2xl font-bold text-white mt-2">{{ students|length }}</h3>
+                </div>
+                <div class="bg-blue-700 p-3 rounded-lg">
+                    <i class="fas fa-users text-blue-300"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm text-blue-300">
+                <i class="fas fa-arrow-up mr-1"></i> 12% from last month
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-900 to-purple-800 p-6 rounded-xl shadow-lg border border-purple-800 hover:border-purple-500 transition-all duration-300">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-purple-300 text-sm font-medium">Avg. Performance</p>
+                    <h3 class="text-2xl font-bold text-white mt-2">
+                        {% if avg_performance %}{{ avg_performance|floatformat:1 }}{% else %}N/A{% endif %}
+                    </h3>
+                </div>
+                <div class="bg-purple-700 p-3 rounded-lg">
+                    <i class="fas fa-chart-line text-purple-300"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm text-purple-300">
+                <i class="fas fa-arrow-{% if performance_trend == 'up' %}up text-green-400{% else %}down text-red-400{% endif %} mr-1"></i>
+                {% if performance_trend %} {{ trend_percentage }}% from last month {% else %} No trend data {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-teal-900 to-teal-800 p-6 rounded-xl shadow-lg border border-teal-800 hover:border-teal-500 transition-all duration-300">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-teal-300 text-sm font-medium">At Risk Students</p>
+                    <h3 class="text-2xl font-bold text-white mt-2">{{ at_risk_count }}</h3>
+                </div>
+                <div class="bg-teal-700 p-3 rounded-lg">
+                    <i class="fas fa-exclamation-triangle text-teal-300"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm text-teal-300">
+                <i class="fas fa-arrow-{% if risk_trend == 'up' %}up text-red-400{% else %}down text-green-400{% endif %} mr-1"></i>
+                {% if risk_trend %} {{ risk_percentage }}% from last month {% else %} No trend data {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-indigo-900 to-indigo-800 p-6 rounded-xl shadow-lg border border-indigo-800 hover:border-indigo-500 transition-all duration-300">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-indigo-300 text-sm font-medium">Avg. Attendance</p>
+                    <h3 class="text-2xl font-bold text-white mt-2">
+                        {% if avg_attendance %}{{ avg_attendance|floatformat:1 }}%{% else %}N/A{% endif %}
+                    </h3>
+                </div>
+                <div class="bg-indigo-700 p-3 rounded-lg">
+                    <i class="fas fa-calendar-check text-indigo-300"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm text-indigo-300">
+                <i class="fas fa-arrow-{% if attendance_trend == 'up' %}up text-green-400{% else %}down text-red-400{% endif %} mr-1"></i>
+                {% if attendance_trend %} {{ attendance_percentage }}% from last month {% else %} No trend data {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Prediction Form -->
+        <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 hover:border-blue-500 transition-all duration-300">
+            <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300 mb-4">Performance Prediction</h3>
+            <form method="post" action="{% url 'dashboard:predict' %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="student_id" class="block text-gray-400 mb-2">Select Student</label>
+                    <select name="student_id" id="student_id" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-800 transition-all duration-300" required>
+                        <option value="" disabled selected>Select a student</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}">{{ student.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="model_type" class="block text-gray-400 mb-2">Prediction Model</label>
+                    <select name="model_type" id="model_type" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-800 transition-all duration-300">
+                        <option value="random_forest">Random Forest (Default)</option>
+                        <option value="neural_net">Neural Network</option>
+                        <option value="gradient_boost">Gradient Boost</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center">
+                    <i class="fas fa-chart-line mr-2"></i> Predict Performance
+                </button>
+            </form>
+            
+            <!-- Recent Predictions -->
+            <div class="mt-6">
+                <h4 class="text-gray-400 font-medium mb-3">Recent Predictions</h4>
+                <div class="space-y-3">
+                    {% for prediction in recent_predictions|slice:":3" %}
+                    <div class="bg-gray-700 p-3 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p class="text-white font-medium">{{ prediction.student.name }}</p>
+                            <p class="text-xs text-gray-400">{{ prediction.timestamp|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="bg-{% if prediction.score >= 75 %}green{% elif prediction.score >= 50 %}yellow{% else %}red{% endif %}-900 text-{% if prediction.score >= 75 %}green{% elif prediction.score >= 50 %}yellow{% else %}red{% endif %}-300 px-3 py-1 rounded-full text-sm font-bold">
+                            {{ prediction.score|floatformat:0 }}%
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-sm">No recent predictions</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Visualization -->
+        <div class="lg:col-span-2 bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 hover:border-purple-500 transition-all duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-300">Performance Analysis</h3>
+                <div class="flex space-x-2">
+                    <button class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded-lg text-sm transition-all duration-300">
+                        Weekly
+                    </button>
+                    <button class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-1 rounded-lg text-sm transition-all duration-300">
+                        Monthly
+                    </button>
+                    <button class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded-lg text-sm transition-all duration-300">
+                        Yearly
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chart Container -->
+            <div class="h-80">
+                <canvas id="performanceChart"></canvas>
+            </div>
+            
+            <!-- Performance Distribution -->
+            <div class="mt-6">
+                <h4 class="text-gray-400 font-medium mb-3">Performance Distribution</h4>
+                <div class="w-full bg-gray-700 rounded-full h-4">
+                    <div class="bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 h-4 rounded-full" style="width: 100%"></div>
+                </div>
+                <div class="flex justify-between mt-2">
+                    <span class="text-xs text-green-400">High ({{ high_performance_count }})</span>
+                    <span class="text-xs text-yellow-400">Medium ({{ medium_performance_count }})</span>
+                    <span class="text-xs text-red-400">Low ({{ low_performance_count }})</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Table with Enhanced Features -->
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 hover:border-teal-500 transition-all duration-300">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">Student Performance Data</h3>
+            <div class="flex space-x-2">
+                <div class="relative">
+                    <input type="text" placeholder="Search students..." class="bg-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 w-64">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+                <button class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded-lg transition-all duration-300">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+        </div>
+        
         {% if students %}
-        <table class="w-full text-left text-gray-400 border-collapse">
-            <thead>
-                <tr class="bg-gray-700">
-                    <th class="border-b border-gray-600 p-2">Name</th>
-                    <th class="border-b border-gray-600 p-2">Attendance</th>
-                    <th class="border-b border-gray-600 p-2">Test Scores</th>
-                    <th class="border-b border-gray-600 p-2">Assignments</th>
-                    <th class="border-b border-gray-600 p-2">Predicted Performance</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
-                <tr class="hover:bg-gray-800">
-                    <td class="border-b border-gray-600 p-2">{{ student.name }}</td>
-                    <td class="border-b border-gray-600 p-2">{{ student.attendance }}</td>
-                    <td class="border-b border-gray-600 p-2">{{ student.test_scores }}</td>
-                    <td class="border-b border-gray-600 p-2">{{ student.assignments }}</td>
-                    <td class="border-b border-gray-600 p-2">
-                        {% if student.performance_prediction %}
-                        {{ student.performance_prediction|floatformat:2 }}
-                        {% else %}
-                        <span class="text-gray-500">Not Predicted</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-gray-400 border-collapse">
+                <thead>
+                    <tr class="bg-gray-700">
+                        <th class="p-3 border-b border-gray-600 cursor-pointer hover:bg-gray-600 transition duration-300">
+                            <div class="flex items-center">
+                                Name
+                                <i class="fas fa-sort ml-2 text-xs opacity-50"></i>
+                            </div>
+                        </th>
+                        <th class="p-3 border-b border-gray-600 cursor-pointer hover:bg-gray-600 transition duration-300">
+                            <div class="flex items-center">
+                                Attendance
+                                <i class="fas fa-sort ml-2 text-xs opacity-50"></i>
+                            </div>
+                        </th>
+                        <th class="p-3 border-b border-gray-600 cursor-pointer hover:bg-gray-600 transition duration-300">
+                            <div class="flex items-center">
+                                Test Scores
+                                <i class="fas fa-sort ml-2 text-xs opacity-50"></i>
+                            </div>
+                        </th>
+                        <th class="p-3 border-b border-gray-600 cursor-pointer hover:bg-gray-600 transition duration-300">
+                            <div class="flex items-center">
+                                Assignments
+                                <i class="fas fa-sort ml-2 text-xs opacity-50"></i>
+                            </div>
+                        </th>
+                        <th class="p-3 border-b border-gray-600 cursor-pointer hover:bg-gray-600 transition duration-300">
+                            <div class="flex items-center">
+                                Predicted Performance
+                                <i class="fas fa-sort ml-2 text-xs opacity-50"></i>
+                            </div>
+                        </th>
+                        <th class="p-3 border-b border-gray-600">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="hover:bg-gray-700 transition duration-300">
+                        <td class="p-3 border-b border-gray-700">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold mr-3">
+                                    {{ student.name|first|upper }}
+                                </div>
+                                <span class="font-medium text-white">{{ student.name }}</span>
+                            </div>
+                        </td>
+                        <td class="p-3 border-b border-gray-700">
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-600 rounded-full h-2 mr-2">
+                                    <div class="bg-{% if student.attendance >= 80 %}green{% elif student.attendance >= 60 %}yellow{% else %}red{% endif %}-500 h-2 rounded-full" 
+                                         style="width: {{ student.attendance }}%"></div>
+                                </div>
+                                {{ student.attendance }}%
+                            </div>
+                        </td>
+                        <td class="p-3 border-b border-gray-700">
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-600 rounded-full h-2 mr-2">
+                                    <div class="bg-{% if student.test_scores >= 80 %}green{% elif student.test_scores >= 60 %}yellow{% else %}red{% endif %}-500 h-2 rounded-full" 
+                                         style="width: {{ student.test_scores }}%"></div>
+                                </div>
+                                {{ student.test_scores }}%
+                            </div>
+                        </td>
+                        <td class="p-3 border-b border-gray-700">
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-600 rounded-full h-2 mr-2">
+                                    <div class="bg-{% if student.assignments >= 80 %}green{% elif student.assignments >= 60 %}yellow{% else %}red{% endif %}-500 h-2 rounded-full" 
+                                         style="width: {{ student.assignments }}%"></div>
+                                </div>
+                                {{ student.assignments }}%
+                            </div>
+                        </td>
+                        <td class="p-3 border-b border-gray-700">
+                            {% if student.performance_prediction %}
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-600 rounded-full h-2 mr-2">
+                                    <div class="bg-{% if student.performance_prediction >= 75 %}green{% elif student.performance_prediction >= 50 %}yellow{% else %}red{% endif %}-500 h-2 rounded-full" 
+                                         style="width: {{ student.performance_prediction }}%"></div>
+                                </div>
+                                <span class="font-bold text-{% if student.performance_prediction >= 75 %}green{% elif student.performance_prediction >= 50 %}yellow{% else %}red{% endif %}-400">
+                                    {{ student.performance_prediction|floatformat:1 }}%
+                                </span>
+                            </div>
+                            {% else %}
+                            <span class="text-gray-500">Not Predicted</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 border-b border-gray-700">
+                            <div class="flex space-x-2">
+                                <button class="w-8 h-8 rounded-full bg-blue-700 hover:bg-blue-600 text-white flex items-center justify-center transition duration-300" title="Predict">
+                                    <i class="fas fa-chart-line text-sm"></i>
+                                </button>
+                                <button class="w-8 h-8 rounded-full bg-purple-700 hover:bg-purple-600 text-white flex items-center justify-center transition duration-300" title="Details">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                                <button class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center transition duration-300" title="Interventions">
+                                    <i class="fas fa-lightbulb text-sm"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="flex justify-between items-center mt-6">
+            <div class="text-sm text-gray-400">
+                Showing 1 to {{ students|length }} of {{ students|length }} entries
+            </div>
+            <div class="flex space-x-2">
+                <button class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded-lg transition duration-300">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <button class="bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition duration-300">
+                    1
+                </button>
+                <button class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded-lg transition duration-300">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+            </div>
+        </div>
         {% else %}
-        <p class="text-gray-400">No students available. Please add student data.</p>
+        <div class="bg-gray-700 rounded-lg p-8 text-center">
+            <i class="fas fa-user-graduate text-4xl text-gray-500 mb-4"></i>
+            <h4 class="text-gray-400 font-medium mb-2">No Student Data Available</h4>
+            <p class="text-gray-500 mb-4">Add student data to begin performance analysis</p>
+            <button class="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-2 px-6 rounded-lg shadow-md transition-all duration-300">
+                <i class="fas fa-plus mr-2"></i> Add Students
+            </button>
+        </div>
         {% endif %}
     </div>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Performance Chart
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                datasets: [
+                    {
+                        label: 'Class Average',
+                        data: [65, 68, 70, 72, 75, 73],
+                        borderColor: '#818cf8',
+                        backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Top 25%',
+                        data: [80, 82, 85, 84, 88, 86],
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Bottom 25%',
+                        data: [50, 52, 48, 45, 47, 50],
+                        borderColor: '#f87171',
+                        backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#e2e8f0',
+                            font: {
+                                family: 'Inter'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#e2e8f0',
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        displayColors: true,
+                        intersect: false,
+                        mode: 'index'
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: '#334155'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#334155'
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        min: 30,
+                        max: 100
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+
+        // Make table rows clickable
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                // Here you would typically navigate to a detail view
+                console.log('Navigating to student details for:', this.querySelector('td').textContent);
+            });
+        });
+
+        // Add sort functionality to table headers
+        document.querySelectorAll('th').forEach(header => {
+            header.addEventListener('click', function() {
+                // Here you would implement sorting logic
+                console.log('Sorting by:', this.textContent.trim());
+            });
+        });
+    });
+</script>
 {% endblock %}

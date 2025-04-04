@@ -1,5 +1,6 @@
 import pandas as pd
 import random
+import os
 
 # List of Indian names from Maharashtra
 names = [
@@ -22,7 +23,7 @@ data = {
 df = pd.DataFrame(data)
 
 # Save to Excel
-output_path = "d:\\College Project\\Project\\Student-Performance-Prediction\\performance\\student_data.xlsx"
+output_path = os.path.join("d:\\College Project\\Project 01\\performance", "student_data.xlsx")
 df.to_excel(output_path, index=False)
 
 print(f"Dataset saved to {output_path}")

@@ -25,5 +25,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('dashboard/', include('dashboard.urls')),  # Include dashboard app URLs
     path('auth/', include('authentication.urls', namespace='authentication')),  # Include authentication app URLs
-    path('', RedirectView.as_view(url='/auth/login/', permanent=False)),  # Redirect root URL to login page
+    path('', base_view, name='base'),  # Changed this line to show base.html
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

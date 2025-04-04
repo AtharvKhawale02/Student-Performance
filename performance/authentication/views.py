@@ -31,4 +31,5 @@ def logout_view(request):
     return redirect('login')
 
 def base_view(request):
-    return render(request, 'base.html')  # Render base.html for the root URL
+    """Render the base template for the root URL"""
+    return render(request, 'base.html')
