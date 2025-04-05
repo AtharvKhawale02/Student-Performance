@@ -19,11 +19,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from authentication.views import base_view  # Import the base_view function
+from authentication.views import base_view  # Import base_view
 
 urlpatterns = [
+    path('', base_view, name='home'),  # Put this first to ensure it's the default
     path('admin/', admin.site.urls),
-    path('dashboard/', include('dashboard.urls')),  # Include dashboard app URLs
-    path('auth/', include('authentication.urls', namespace='authentication')),  # Include authentication app URLs
-    path('', base_view, name='base'),  # Changed this line to show base.html
+    path('dashboard/', include('dashboard.urls')),
+    path('auth/', include('authentication.urls', namespace='authentication')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

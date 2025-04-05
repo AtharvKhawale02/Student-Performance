@@ -19,17 +19,16 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('dashboard:home')  # Redirect to dashboard after login
+            return redirect('dashboard:home')  # Redirect to dashboard/home.html after successful login
         else:
             return render(request, 'authentication/login.html', {'form': form, 'error': 'Invalid credentials'})
     else:
         form = CustomAuthenticationForm()
-    return render(request, 'authentication/login.html', {'form': form})  # Ensure login.html is rendered
+    return render(request, 'authentication/login.html', {'form': form})
 
 def logout_view(request):
     logout(request)
     return redirect('login')
 
 def base_view(request):
-    """Render the base template for the root URL"""
-    return render(request, 'base.html')
+    return render(request, 'base.html')  # Show landing page for non-authenticated users

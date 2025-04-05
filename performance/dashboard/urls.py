@@ -4,6 +4,8 @@ from . import views
 app_name = 'dashboard'
 
 urlpatterns = [
-    path('', views.home, name='home'),  # Map root URL of dashboard to the home view
-    path('predict/', views.predict_performance, name='predict'),  # Path for performance prediction
+    path('', views.home, name='home'),
+    path('predict/', views.predict_performance, name='predict'),
+    path('upload-data/', views.upload_data, name='upload_data'),
+    path('metrics/', views.get_realtime_metrics, name='metrics'),
 ]

@@ -131,3 +131,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authentication.CustomUser'
 
 LOGIN_URL = '/auth/login/'  # Redirect unauthenticated users to the login page
+LOGIN_REDIRECT_URL = '/dashboard/'  # Redirect to dashboard after successful login
