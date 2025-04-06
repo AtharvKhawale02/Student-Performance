@@ -2,28 +2,26 @@ import pandas as pd
 import random
 import os
 
-# List of Indian names from Maharashtra
-names = [
-    "Atharv Khawale", "Priyaal Gaykwad", "Mukesh Gole", "Devansh Nandanwar", "Mayur Dhawale",
-    "Rohan Patil", "Sneha Jadhav", "Aditya Deshmukh", "Pooja Shinde", "Siddharth Pawar",
-    "Anjali Kulkarni", "Rahul Joshi", "Neha Sawant", "Kunal More", "Shruti Chavan",
-    "Amit Bhosale", "Prachi Salunkhe", "Vishal Kadam", "Komal Gaikwad", "Sagar Thakur"
-]
+def generate_sample_data(num_students=50):
+    data = {
+        "roll_no": [f"2024{str(i+1).zfill(3)}" for i in range(num_students)],
+        "name": [f"Student {i+1}" for i in range(num_students)],
+        "year_of_study": [random.randint(1, 4) for _ in range(num_students)],
+        "participation": [random.randint(50, 100) for _ in range(num_students)],
+        "assignments": [random.randint(40, 100) for _ in range(num_students)],
+        "test_scores": [random.randint(40, 100) for _ in range(num_students)],
+        "attendance": [random.randint(50, 100) for _ in range(num_students)],
+        "final_grade": [random.randint(50, 100) for _ in range(num_students)]
+    }
+    
+    df = pd.DataFrame(data)
+    return df
 
-# Generate synthetic data
-data = {
-    "Name": random.choices(names, k=50),  # Randomly select names
-    "Attendance": [random.randint(50, 100) for _ in range(50)],  # Attendance percentage
-    "Test Scores": [random.randint(40, 100) for _ in range(50)],  # Test scores
-    "Assignments": [random.randint(40, 100) for _ in range(50)],  # Assignment scores
-    "Performance": [random.randint(50, 100) for _ in range(50)]  # Overall performance
-}
-
-# Create a DataFrame
-df = pd.DataFrame(data)
-
-# Save to Excel
-output_path = os.path.join("d:\\College Project\\Project 01\\performance", "student_data.xlsx")
-df.to_excel(output_path, index=False)
-
-print(f"Dataset saved to {output_path}")
+if __name__ == "__main__":
+    # Generate sample data
+    df = generate_sample_data()
+    
+    # Save to Excel with specific column names
+    output_path = "student_data.xlsx"
+    df.to_excel(output_path, index=False)
+    print(f"Sample data generated and saved to {output_path}")

@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    <!-- Add this after the Dashboard Header -->
+    <!-- Upload Data Section -->
     <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 hover:border-green-500 transition-all duration-300 mb-8">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-300">Upload Training Data</h3>
@@ -139,7 +139,7 @@
         <!-- Prediction Form -->
         <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 hover:border-blue-500 transition-all duration-300">
             <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300 mb-4">Performance Prediction</h3>
-            <form method="post" action="{% url 'dashboard:predict' %}" class="space-y-4">
+            <form method="post" action="{% url 'dashboard:predict' %}" class="space-y-4" id="predictionForm">
                 {% csrf_token %}
                 <div>
                     <label for="student_id" class="block text-gray-400 mb-2">Select Student</label>
@@ -163,6 +163,51 @@
                 </button>
             </form>
             
+            <!-- Prediction Result Card -->
+            <div id="predictionResultCard" class="mt-6 bg-gray-700 p-6 rounded-lg hidden animate__animated animate__fadeIn">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h4 class="text-lg font-medium text-white" id="selectedStudentName">Student Name</h4>
+                        <p class="text-sm text-gray-400">Predicted Performance</p>
+                    </div>
+                    <div class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400" id="predictedScore">
+                        0%
+                    </div>
+                </div>
+                
+                <div class="relative pt-1 mb-4">
+                    <div class="flex mb-2 items-center justify-between">
+                        <div class="text-xs text-gray-400">Progress</div>
+                        <div class="text-right">
+                            <span id="accuracyScore" class="text-xs font-semibold inline-block text-blue-400">
+                                Accuracy: 95%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="overflow-hidden h-2 text-xs flex rounded-full bg-gray-600">
+                        <div id="predictionProgress" 
+                             class="transition-all duration-500 ease-out shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-blue-500 to-purple-500"
+                             style="width: 0%">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-gray-600 p-2 rounded">
+                        <p class="text-xs text-gray-400">Attendance</p>
+                        <p class="font-bold text-white" id="attendanceScore">0%</p>
+                    </div>
+                    <div class="bg-gray-600 p-2 rounded">
+                        <p class="text-xs text-gray-400">Assignments</p>
+                        <p class="font-bold text-white" id="assignmentScore">0%</p>
+                    </div>
+                    <div class="bg-gray-600 p-2 rounded">
+                        <p class="text-xs text-gray-400">Test Scores</p>
+                        <p class="font-bold text-white" id="testScore">0%</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Recent Predictions -->
             <div class="mt-6">
                 <h4 class="text-gray-400 font-medium mb-3">Recent Predictions</h4>
@@ -186,7 +231,25 @@
 
         <!-- Performance Visualization -->
         <div class="lg:col-span-2 space-y-6">
-            <!-- Line Graph Performance Metrics -->
+            <!-- Performance Comparison Chart -->
+            <div id="comparisonChartContainer" class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 hidden animate__animated animate__fadeIn">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-300">Performance Comparison</h3>
+                    <div class="flex space-x-2">
+                        <button id="radarViewBtn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm transition-colors duration-200">
+                            <i class="fas fa-chart-pie mr-1"></i> Radar
+                        </button>
+                        <button id="barViewBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition-colors duration-200">
+                            <i class="fas fa-chart-bar mr-1"></i> Bar
+                        </button>
+                    </div>
+                </div>
+                <div class="h-96">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Performance Trends Chart -->
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
                 <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300 mb-4">Performance Trends</h3>
                 <div class="h-72">
@@ -204,7 +267,7 @@
         </div>
     </div>
 
-    <!-- Student Table with Enhanced Features -->
+    <!-- Student Table -->
     <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 hover:border-teal-500 transition-all duration-300">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">Student Performance Data</h3>
@@ -335,747 +398,404 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Performance Chart
-        const ctx = document.getElementById('performanceChart').getContext('2d');
-        const performanceChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
-                datasets: [
-                    {
-                        label: 'Class Average',
-                        data: [65, 68, 70, 72, 75, 73],
-                        borderColor: '#818cf8',
-                        backgroundColor: 'rgba(129, 140, 248, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    },
-                    {
-                        label: 'Top 25%',
-                        data: [80, 82, 85, 84, 88, 86],
-                        borderColor: '#34d399',
-                        backgroundColor: 'rgba(52, 211, 153, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    },
-                    {
-                        label: 'Bottom 25%',
-                        data: [50, 52, 48, 45, 47, 50],
-                        borderColor: '#f87171',
-                        backgroundColor: 'rgba(248, 113, 113, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            color: '#e2e8f0',
-                            font: {
-                                family: 'Inter'
-                            }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: '#1e293b',
-                        titleColor: '#f8fafc',
-                        bodyColor: '#e2e8f0',
-                        borderColor: '#334155',
-                        borderWidth: 1,
-                        displayColors: true,
-                        intersect: false,
-                        mode: 'index'
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: '#334155'
-                        },
-                        ticks: {
-                            color: '#94a3b8'
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: '#334155'
-                        },
-                        ticks: {
-                            color: '#94a3b8',
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        },
-                        min: 30,
-                        max: 100
-                    }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    axis: 'x',
-                    intersect: false
-                }
-            }
-        });
+// Global chart references
+let comparisonChart;
+let trendChart;
+let matrixChart;
 
-        // Make table rows clickable
-        document.querySelectorAll('tbody tr').forEach(row => {
-            row.addEventListener('click', function() {
-                // Here you would typically navigate to a detail view
-                console.log('Navigating to student details for:', this.querySelector('td').textContent);
-            });
-        });
-
-        // Add sort functionality to table headers
-        document.querySelectorAll('th').forEach(header => {
-            header.addEventListener('click', function() {
-                // Here you would implement sorting logic
-                console.log('Sorting by:', this.textContent.trim());
-            });
-        });
-    });
-
-    function showTrainingModal() {
-        document.getElementById('trainingModal').classList.remove('hidden');
-        document.getElementById('trainingModal').classList.add('flex');
-        document.getElementById('trainingStatus').classList.remove('hidden');
-        document.getElementById('completionStatus').classList.add('hidden');
-    }
-
-    function showCompletionStatus() {
-        document.getElementById('trainingStatus').classList.add('hidden');
-        document.getElementById('completionStatus').classList.remove('hidden');
-    }
-
-    function closeModal() {
-        document.getElementById('trainingModal').classList.add('hidden');
-        document.getElementById('trainingModal').classList.remove('flex');
-    }
-
-    document.getElementById('uploadForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        showTrainingModal();
-        
-        let formData = new FormData(this);
-        
-        fetch("{% url 'dashboard:upload_data' %}", {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showCompletionStatus();
-                setTimeout(() => {
-                    window.location.reload();  // Reload to show updated predictions
-                }, 2000);
-            } else {
-                alert('Error: ' + data.message);
-                closeModal();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            closeModal();
-        });
-    });
-
-    // Individual vs Average Performance Chart
-    const compCtx = document.getElementById('comparisonChart').getContext('2d');
-    new Chart(compCtx, {
-        type: 'radar',
-        data: {
-            labels: ['Participation', 'Assignments', 'Test Scores', 'Attendance'],
-            datasets: [{
-                label: 'Class Average',
-                data: [
-                    {{ avg_metrics.participation|floatformat:1 }},
-                    {{ avg_metrics.assignments|floatformat:1 }},
-                    {{ avg_metrics.test_scores|floatformat:1 }},
-                    {{ avg_metrics.attendance|floatformat:1 }}
-                ],
-                backgroundColor: 'rgba(147, 51, 234, 0.2)',
-                borderColor: 'rgb(147, 51, 234)',
-                borderWidth: 2,
-                pointBackgroundColor: 'rgb(147, 51, 234)'
-            }]
-        },
-        options: {
-            scales: {
-                r: {
-                    angleLines: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    pointLabels: {
-                        color: '#e2e8f0'
-                    },
-                    ticks: {
-                        color: '#94a3b8',
-                        backdropColor: 'transparent'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#e2e8f0'
-                    }
-                }
-            }
-        }
-    });
-
-    // Performance by Year Chart
-    const yearCtx = document.getElementById('yearChart').getContext('2d');
-    new Chart(yearCtx, {
-        type: 'bar',
-        data: {
-            labels: ['1st Year', '2nd Year', '3rd Year', '4th Year'],
-            datasets: [{
-                label: 'Average Performance',
-                data: [
-                    {{ performance_by_year.1|floatformat:1 }},
-                    {{ performance_by_year.2|floatformat:1 }},
-                    {{ performance_by_year.3|floatformat:1 }},
-                    {{ performance_by_year.4|floatformat:1 }}
-                ],
-                backgroundColor: [
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(249, 115, 22, 0.8)',
-                    'rgba(139, 92, 246, 0.8)'
-                ]
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#94a3b8'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#94a3b8'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-
-    // Performance Distribution Chart
-    const distCtx = document.getElementById('distributionChart').getContext('2d');
-    new Chart(distCtx, {
-        type: 'line',
-        data: {
-            labels: {{ student_names|safe }},
-            datasets: [{
-                label: 'Individual Performance',
-                data: {{ student_performances|safe }},
-                borderColor: 'rgb(16, 185, 129)',
-                tension: 0.4,
-                fill: true,
-                backgroundColor: 'rgba(16, 185, 129, 0.1)'
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#94a3b8'
-                    }
-                },
-                x: {
-                    display: false
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#e2e8f0'
-                    }
-                }
-            }
-        }
-    });
-
-    // Real-time Performance Chart
-    const realTimeCtx = document.getElementById('realTimeChart').getContext('2d');
-    const realTimeChart = new Chart(realTimeCtx, {
-        type: 'line',
-        data: {
-            labels: {{ student_names|safe }},
-            datasets: [{
-                label: 'Assignments',
-                data: {{ performance_trends.assignments|safe }},
-                borderColor: '#60A5FA',
-                tension: 0.4
-            }, {
-                label: 'Test Scores',
-                data: {{ performance_trends.test_scores|safe }},
-                borderColor: '#34D399',
-                tension: 0.4
-            }, {
-                label: 'Attendance',
-                data: {{ performance_trends.attendance|safe }},
-                borderColor: '#F472B6',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            plugins: {
-                legend: {
-                    labels: { color: '#E5E7EB' }
-                }
-            },
-            scales: {
-                y: {
-                    min: 0,
-                    max: 100,
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#9CA3AF' }
-                },
-                x: {
-                    display: false
-                }
-            }
-        }
-    });
-
-    // Grade Distribution Chart
-    const gradeCtx = document.getElementById('gradeChart').getContext('2d');
-    new Chart(gradeCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['A', 'B', 'C', 'D', 'F'],
-            datasets: [{
-                data: [
-                    {{ grade_distribution.A }},
-                    {{ grade_distribution.B }},
-                    {{ grade_distribution.C }},
-                    {{ grade_distribution.D }},
-                    {{ grade_distribution.F }}
-                ],
-                backgroundColor: [
-                    '#34D399', '#60A5FA', '#FBBF24', '#F472B6', '#EF4444'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: '#E5E7EB' }
-                }
-            }
-        }
-    });
-
-    // Student Distribution by Year Chart
-    const yearCtx = document.getElementById('yearDistributionChart').getContext('2d');
-    new Chart(yearCtx, {
-        type: 'bar',
-        data: {
-            labels: ['1st Year', '2nd Year', '3rd Year', '4th Year'],
-            datasets: [{
-                label: 'Number of Students',
-                data: [
-                    {{ student_count_by_year.1 }},
-                    {{ student_count_by_year.2 }},
-                    {{ student_count_by_year.3 }},
-                    {{ student_count_by_year.4 }}
-                ],
-                backgroundColor: [
-                    'rgba(96, 165, 250, 0.7)',
-                    'rgba(52, 211, 153, 0.7)',
-                    'rgba(244, 114, 182, 0.7)',
-                    'rgba(251, 191, 36, 0.7)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#9CA3AF' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#9CA3AF' }
-                }
-            }
-        }
-    });
-
-    // Function to update real-time metrics
-    function updateMetrics() {
-        fetch('/dashboard/metrics/')
-            .then(response => response.json())
-            .then(data => {
-                realTimeChart.data.datasets.forEach((dataset, index) => {
-                    dataset.data = data.metrics[index];
-                });
-                realTimeChart.update();
-            });
-    }
-
-    // Update metrics every 30 seconds
-    setInterval(updateMetrics, 30000);
-</script>
-
-<script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all charts
+    // Initialize charts
     initializeCharts();
     
-    // Update real-time data every 5 seconds
-    setInterval(updateCharts, 5000);
+    // Setup form submission
+    setupPredictionForm();
+    
+    // Setup chart view toggle buttons
+    setupChartViewToggle();
 });
 
 function initializeCharts() {
-    // Real-time Performance Chart
-    const realTimeCtx = document.getElementById('realTimeChart').getContext('2d');
-    window.realTimeChart = new Chart(realTimeCtx, {
+    // Performance Trend Chart
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    trendChart = new Chart(trendCtx, {
         type: 'line',
         data: {
-            labels: {{ student_names|safe }},
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
             datasets: [{
-                label: 'Assignments',
-                data: {{ chart_data.weekly_performance.datasets.assignments|safe }},
-                borderColor: '#60A5FA',
-                tension: 0.4,
-                fill: false
-            }, {
-                label: 'Test Scores',
-                data: {{ chart_data.weekly_performance.datasets.test_scores|safe }},
-                borderColor: '#34D399',
-                tension: 0.4,
-                fill: false
-            }, {
-                label: 'Attendance',
-                data: {{ chart_data.weekly_performance.datasets.attendance|safe }},
-                borderColor: '#F472B6',
-                tension: 0.4,
-                fill: false
+                label: 'Class Average',
+                data: [65, 68, 70, 72, 75, 73],
+                borderColor: '#818cf8',
+                backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    labels: { color: '#E5E7EB' }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#9CA3AF' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#9CA3AF' }
-                }
-            }
-        }
+        options: getChartOptions('Performance Trends Over Time')
     });
 
-    // Grade Distribution Chart
-    const gradeCtx = document.getElementById('gradeChart').getContext('2d');
-    window.gradeChart = new Chart(gradeCtx, {
-        type: 'doughnut',
+    // Performance Matrix Chart
+    const matrixCtx = document.getElementById('matrixChart').getContext('2d');
+    matrixChart = new Chart(matrixCtx, {
+        type: 'radar',
         data: {
-            labels: ['A', 'B', 'C', 'D', 'F'],
+            labels: ['Attendance', 'Assignments', 'Tests', 'Participation', 'Engagement'],
             datasets: [{
-                data: [
-                    {{ grade_distribution.A }},
-                    {{ grade_distribution.B }},
-                    {{ grade_distribution.C }},
-                    {{ grade_distribution.D }},
-                    {{ grade_distribution.F }}
-                ],
-                backgroundColor: [
-                    '#34D399',
-                    '#60A5FA',
-                    '#FBBF24',
-                    '#F472B6',
-                    '#EF4444'
-                ]
+                label: 'Class Average',
+                data: [75, 68, 72, 65, 70],
+                borderColor: '#60a5fa',
+                backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                borderWidth: 2
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: '#E5E7EB' }
+        options: getRadarChartOptions('Performance Metrics')
+    });
+}
+
+function setupPredictionForm() {
+    const form = document.getElementById('predictionForm');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const studentId = formData.get('student_id');
+        const studentName = document.getElementById('student_id').options[document.getElementById('student_id').selectedIndex].text;
+        
+        // Show loading state
+        document.getElementById('predictionResultCard').classList.add('hidden');
+        document.getElementById('comparisonChartContainer').classList.add('hidden');
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
                 }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                updatePredictionResult(data, studentName);
+                updateComparisonChart(data);
+                
+                // Show results with animation
+                document.getElementById('predictionResultCard').classList.remove('hidden');
+                document.getElementById('comparisonChartContainer').classList.remove('hidden');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while making the prediction');
+        }
+    });
+}
+
+function updatePredictionResult(data, studentName) {
+    // Update student name
+    document.getElementById('selectedStudentName').textContent = studentName;
+    
+    // Update predicted score with animation
+    const predictedScore = data.predicted_score;
+    document.getElementById('predictedScore').textContent = `${predictedScore}%`;
+    
+    // Animate progress bar
+    const progressBar = document.getElementById('predictionProgress');
+    progressBar.style.width = '0%';
+    setTimeout(() => {
+        progressBar.style.width = `${predictedScore}%`;
+    }, 100);
+    
+    // Update accuracy
+    document.getElementById('accuracyScore').textContent = `Accuracy: ${data.accuracy || 95}%`;
+    
+    // Update metric scores
+    document.getElementById('attendanceScore').textContent = `${data.student.attendance}%`;
+    document.getElementById('assignmentScore').textContent = `${data.student.assignments}%`;
+    document.getElementById('testScore').textContent = `${data.student.test_scores}%`;
+}
+
+function updateComparisonChart(data) {
+    const ctx = document.getElementById('comparisonChart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if (comparisonChart) {
+        comparisonChart.destroy();
+    }
+    
+    // Determine chart type based on active button
+    const chartType = document.getElementById('radarViewBtn').classList.contains('bg-purple-700') ? 'radar' : 'bar';
+    
+    comparisonChart = new Chart(ctx, {
+        type: chartType,
+        data: {
+            labels: ['Attendance', 'Assignments', 'Test Scores', 'Overall'],
+            datasets: [
+                {
+                    label: 'Selected Student',
+                    data: [
+                        data.student.attendance,
+                        data.student.assignments,
+                        data.student.test_scores,
+                        data.predicted_score
+                    ],
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Class Average',
+                    data: [
+                        data.class_avg.attendance,
+                        data.class_avg.assignments,
+                        data.class_avg.test_scores,
+                        data.class_avg.overall
+                    ],
+                    backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                    borderColor: 'rgba(139, 92, 246, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Top Performer',
+                    data: [
+                        data.top_performer.attendance,
+                        data.top_performer.assignments,
+                        data.top_performer.test_scores,
+                        data.top_performer.overall
+                    ],
+                    backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: chartType === 'radar' ? getRadarChartOptions('Performance Comparison') : getChartOptions('Performance Comparison')
+    });
+}
+
+function setupChartViewToggle() {
+    const radarBtn = document.getElementById('radarViewBtn');
+    const barBtn = document.getElementById('barViewBtn');
+    
+    radarBtn.addEventListener('click', function() {
+        if (!this.classList.contains('bg-purple-700')) {
+            this.classList.remove('bg-gray-700');
+            this.classList.add('bg-purple-700');
+            barBtn.classList.remove('bg-purple-700');
+            barBtn.classList.add('bg-gray-700');
+            
+            if (comparisonChart) {
+                comparisonChart.destroy();
+                const ctx = document.getElementById('comparisonChart').getContext('2d');
+                
+                comparisonChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: comparisonChart.data,
+                    options: getRadarChartOptions('Performance Comparison')
+                });
+            }
+        }
+    });
+    
+    barBtn.addEventListener('click', function() {
+        if (!this.classList.contains('bg-purple-700')) {
+            this.classList.remove('bg-gray-700');
+            this.classList.add('bg-purple-700');
+            radarBtn.classList.remove('bg-purple-700');
+            radarBtn.classList.add('bg-gray-700');
+            
+            if (comparisonChart) {
+                comparisonChart.destroy();
+                const ctx = document.getElementById('comparisonChart').getContext('2d');
+                
+                comparisonChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: comparisonChart.data,
+                    options: getChartOptions('Performance Comparison')
+                });
             }
         }
     });
 }
 
-function updateCharts() {
-    fetch('/dashboard/metrics/')
-        .then(response => response.json())
-        .then(data => {
-            // Update real-time chart
-            window.realTimeChart.data.datasets.forEach((dataset, index) => {
-                dataset.data = data.metrics[Object.keys(data.metrics)[index]];
-            });
-            window.realTimeChart.update();
-
-            // Update other charts as needed
-            updateGradeDistribution(data.grade_distribution);
-        })
-        .catch(error => console.error('Error updating charts:', error));
-}
-
-function updateGradeDistribution(data) {
-    if (window.gradeChart && data) {
-        window.gradeChart.data.datasets[0].data = [
-            data.A, data.B, data.C, data.D, data.F
-        ];
-        window.gradeChart.update();
-    }
-}
-
-// Performance Trend Line Chart
-const trendCtx = document.getElementById('trendChart').getContext('2d');
-new Chart(trendCtx, {
-    type: 'line',
-    data: {
-        labels: {{ student_names|safe }},
-        datasets: [{
-            label: 'Assignments',
-            data: {{ performance_trends.assignments|safe }},
-            borderColor: '#60A5FA',
-            tension: 0.4
-        }, {
-            label: 'Test Scores',
-            data: {{ performance_trends.test_scores|safe }},
-            borderColor: '#34D399',
-            tension: 0.4
-        }, {
-            label: 'Attendance',
-            data: {{ performance_trends.attendance|safe }},
-            borderColor: '#F472B6',
-            tension: 0.4
-        }]
-    },
-    options: {
+function getChartOptions(title) {
+    return {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: { intersect: false },
-        plugins: {
-            legend: { labels: { color: '#E5E7EB' } }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                ticks: { color: '#9CA3AF' }
-            },
-            x: {
-                display: false
-            }
-        }
-    }
-});
-
-// Performance Matrix Chart
-const matrixCtx = document.getElementById('matrixChart').getContext('2d');
-new Chart(matrixCtx, {
-    type: 'radar',
-    data: {
-        labels: {{ performance_matrix.metrics|safe }},
-        datasets: [{
-            label: 'Current Performance',
-            data: {{ performance_matrix.current|safe }},
-            borderColor: '#60A5FA',
-            backgroundColor: 'rgba(96, 165, 250, 0.2)'
-        }, {
-            label: 'Target',
-            data: {{ performance_matrix.target|safe }},
-            borderColor: '#34D399',
-            backgroundColor: 'rgba(52, 211, 153, 0.2)'
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            r: {
-                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                pointLabels: { color: '#E5E7EB' },
-                ticks: { 
-                    color: '#9CA3AF',
-                    backdropColor: 'transparent'
-                }
-            }
-        },
         plugins: {
             legend: {
-                labels: { color: '#E5E7EB' }
+                position: 'top',
+                labels: {
+                    color: '#e2e8f0',
+                    font: {
+                        family: 'Inter'
+                    }
+                }
+            },
+            title: {
+                display: true,
+                text: title,
+                color: '#e2e8f0',
+                font: {
+                    size: 16
+                }
+            },
+            tooltip: {
+                backgroundColor: '#1e293b',
+                titleColor: '#f8fafc',
+                bodyColor: '#e2e8f0',
+                borderColor: '#334155',
+                borderWidth: 1,
+                displayColors: true,
+                intersect: false,
+                mode: 'index'
             }
-        }
-    }
-});
-
-// Year Performance Chart
-const yearPerformanceCtx = document.getElementById('yearPerformanceChart').getContext('2d');
-new Chart(yearPerformanceCtx, {
-    type: 'bar',
-    data: {
-        labels: {{ yearly_data.labels|safe }},
-        datasets: [{
-            label: 'Average Grade',
-            data: {{ yearly_data.values|safe }},
-            backgroundColor: [
-                'rgba(129, 140, 248, 0.8)',
-                'rgba(52, 211, 153, 0.8)',
-                'rgba(249, 115, 22, 0.8)',
-                'rgba(139, 92, 246, 0.8)'
-            ],
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        },
         scales: {
-            y: {
-                beginAtZero: true,
+            x: {
                 grid: {
-                    color: 'rgba(255, 255, 255, 0.1)'
+                    color: '#334155'
+                },
+                ticks: {
+                    color: '#94a3b8'
+                }
+            },
+            y: {
+                grid: {
+                    color: '#334155'
                 },
                 ticks: {
                     color: '#94a3b8',
                     callback: function(value) {
                         return value + '%';
                     }
-                }
-            },
-            x: {
-                grid: {
-                    display: false
                 },
-                ticks: {
-                    color: '#94a3b8'
-                }
+                min: 0,
+                max: 100
             }
         },
-        plugins: {
-            legend: {
-                display: false
-            },
-            tooltip: {
-                backgroundColor: '#1e293b',
-                titleColor: '#f8fafc',
-                bodyColor: '#e2e8f0',
-                displayColors: false
-            }
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
         }
-    }
-});
+    };
+}
 
-// Year Distribution Chart
-const yearDistributionCtx = document.getElementById('yearDistributionChart').getContext('2d');
-new Chart(yearDistributionCtx, {
-    type: 'doughnut',
-    data: {
-        labels: {{ yearly_data.labels|safe }},
-        datasets: [{
-            data: {{ yearly_data.counts|safe }},
-            backgroundColor: [
-                'rgba(129, 140, 248, 0.8)',
-                'rgba(52, 211, 153, 0.8)',
-                'rgba(249, 115, 22, 0.8)',
-                'rgba(139, 92, 246, 0.8)'
-            ],
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
+function getRadarChartOptions(title) {
+    return {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                position: 'right',
+                position: 'top',
                 labels: {
-                    color: '#94a3b8',
-                    padding: 20,
+                    color: '#e2e8f0',
                     font: {
-                        size: 12
+                        family: 'Inter'
                     }
+                }
+            },
+            title: {
+                display: true,
+                text: title,
+                color: '#e2e8f0',
+                font: {
+                    size: 16
                 }
             },
             tooltip: {
                 backgroundColor: '#1e293b',
                 titleColor: '#f8fafc',
                 bodyColor: '#e2e8f0',
-                displayColors: false
+                borderColor: '#334155',
+                borderWidth: 1,
+                displayColors: true
+            }
+        },
+        scales: {
+            r: {
+                angleLines: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                pointLabels: {
+                    color: '#e2e8f0'
+                },
+                ticks: {
+                    color: '#94a3b8',
+                    backdropColor: 'transparent',
+                    callback: function(value) {
+                        return value + '%';
+                    }
+                },
+                min: 0,
+                max: 100
             }
         }
-    }
-});
+    };
+}
 
-// ...rest of existing chart code...
+function predictStudent(studentId) {
+    // Set the dropdown value
+    document.getElementById('student_id').value = studentId;
+    
+    // Trigger form submission
+    document.getElementById('predictionForm').dispatchEvent(new Event('submit'));
+}
+
+// Training Modal Functions
+function showTrainingModal() {
+    document.getElementById('trainingModal').classList.remove('hidden');
+    document.getElementById('trainingModal').classList.add('flex');
+    document.getElementById('trainingStatus').classList.remove('hidden');
+    document.getElementById('completionStatus').classList.add('hidden');
+}
+
+function showCompletionStatus() {
+    document.getElementById('trainingStatus').classList.add('hidden');
+    document.getElementById('completionStatus').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('trainingModal').classList.add('hidden');
+    document.getElementById('trainingModal').classList.remove('flex');
+}
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showTrainingModal();
+    
+    let formData = new FormData(this);
+    
+    fetch("{% url 'dashboard:upload_data' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showCompletionStatus();
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            alert('Error: ' + data.message);
+            closeModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        closeModal();
+    });
+});
 </script>
 {% endblock %}

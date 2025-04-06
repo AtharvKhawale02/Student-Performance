@@ -38,8 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authentication',
-    'dashboard',  # Dashboard app
-    'performance',  # Performance tracking app
+    'dashboard',  # Make sure this is here
 ]
 
 MIDDLEWARE = [
@@ -123,6 +122,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']  # Ensure this directory exists
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'  # Ensure this directory exists
 
+UPLOAD_ROOT = BASE_DIR / 'media' / 'uploads'
+MODEL_ROOT = BASE_DIR
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -132,3 +134,7 @@ AUTH_USER_MODEL = 'authentication.CustomUser'
 
 LOGIN_URL = '/auth/login/'  # Redirect unauthenticated users to the login page
 LOGIN_REDIRECT_URL = '/dashboard/'  # Redirect to dashboard after successful login
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]

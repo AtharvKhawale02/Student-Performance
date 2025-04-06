@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
+from django.contrib import messages
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 
 def register(request):
@@ -15,16 +16,17 @@ def register(request):
 
 def login_view(request):
     if request.method == 'POST':
-        form = CustomAuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
             login(request, user)
-            return redirect('dashboard:home')  # Redirect to dashboard/home.html after successful login
+            return redirect('dashboard:home')
         else:
-            return render(request, 'authentication/login.html', {'form': form, 'error': 'Invalid credentials'})
-    else:
-        form = CustomAuthenticationForm()
-    return render(request, 'authentication/login.html', {'form': form})
+            messages.error(request, 'Invalid username or password. Please try again.')
+    
+    return render(request, 'authentication/login.html')
 
 def logout_view(request):
     logout(request)
