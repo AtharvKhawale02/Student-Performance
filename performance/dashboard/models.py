@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from authentication.models import CustomUser
 
 class Student(models.Model):
     roll_no = models.CharField(max_length=20, unique=True)
@@ -33,3 +34,15 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.roll_no})"
+
+class Prediction(models.Model):
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    score = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    model_type = models.CharField(max_length=50, default='random_forest')
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.student.get_full_name()} - {self.score}%"

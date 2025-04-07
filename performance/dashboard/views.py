@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.db.models import Avg, Count
-from .models import Student
+from .models import Student, Prediction
 import joblib
 import os
 from django.conf import settings
@@ -171,6 +171,7 @@ def home(request):
         'attendance_trend': 'up' if attendance_percentage > 0 else 'down',
         'trend_percentage': round(trend_percentage, 1),
         'attendance_percentage': round(attendance_percentage, 1),
+        'recent_predictions': Prediction.objects.select_related('student').order_by('-timestamp')[:3],
     }
     
     # Add prediction value for the chart
@@ -295,9 +296,9 @@ def predict_performance(request):
             return JsonResponse({
                 'success': True,
                 'predicted_score': predicted_score,
-                'accuracy': 95.0,
                 'student': {
                     'attendance': float(student.attendance),
+                    'assignments': float(student.assignments),
                     'assignments': float(student.assignments),
                     'test_scores': float(student.test_scores)
                 },

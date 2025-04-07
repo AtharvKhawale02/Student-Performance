@@ -7,11 +7,17 @@ def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+            user.email = form.cleaned_data['email']
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
+            user.save()
             login(request, user)
-            return redirect('dashboard:home')  # Redirect to dashboard after registration
+            messages.success(request, 'Registration successful!')
+            return redirect('dashboard:home')  # Redirecting to dashboard
     else:
         form = CustomUserCreationForm()
+    
     return render(request, 'authentication/register.html', {'form': form})
 
 def login_view(request):
