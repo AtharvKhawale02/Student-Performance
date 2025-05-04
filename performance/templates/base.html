@@ -107,12 +107,18 @@
                 <span class="gradient-text">Student Performance Prediction</span>
             </h1>
             <nav class="flex space-x-2 md:space-x-4">
-                <a href="{% url 'authentication:login' %}" class="nav-link text-primary-400 hover:text-primary-300 font-medium py-2 px-3 transition duration-300">
-                    Login
-                </a>
-                <a href="{% url 'authentication:register' %}" class="nav-link bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300 hover-grow">
-                    Register
-                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'authentication:logout' %}" class="nav-link bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300 hover-grow">
+                        Logout
+                    </a>
+                {% else %}
+                    <a href="{% url 'authentication:login' %}" class="nav-link text-primary-400 hover:text-primary-300 font-medium py-2 px-3 transition duration-300">
+                        Login
+                    </a>
+                    <a href="{% url 'authentication:register' %}" class="nav-link bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300 hover-grow">
+                        Register
+                    </a>
+                {% endif %}
             </nav>
         </div>
     </header>
@@ -225,7 +231,7 @@
                 <!-- Team Member 2 -->
                 <div class="team-card p-6 rounded-lg text-center">
                     <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-2 border-primary-500">
-                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Priyaal Gayakwad" class="w-full h-full object-cover">
+                        <img src="https://raw.githubusercontent.com/AtharvKhawale02/Student-Performance/main/performance/staticfiles/images/Priyaal.jpg" alt="Priyaal Gayakwad" class="w-full h-full object-cover">
                     </div>
                     <h3 class="text-xl font-bold text-white mb-1">Priyaal Gayakwad</h3>
                     <p class="text-gray-400 mb-3">Frontend Developer</p>
