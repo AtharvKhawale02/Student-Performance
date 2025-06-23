@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,10 @@ SECRET_KEY = 'django-insecure-=s5=kv(h=wrf7d4rxlc131k^=*=!o0g!-==d$&cx)@d%oi%2zg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']  # Update for deployment
+#ALLOWED_HOSTS = ['student-performance-prediction-system-05gk.onrender.com']
+
+ALLOWED_HOSTS = ['student-performance-prediction-system-05gk.onrender.com']
+# CSRF_TRUSTED_ORIGINS = ['https://student-performance-prediction-system-05gk.onrender.com']
 
 
 # Application definition
@@ -119,6 +123,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # Ensure this directory exists
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'  # Ensure this directory exists
 
