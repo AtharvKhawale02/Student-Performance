@@ -28,7 +28,11 @@ DEBUG = True
 
 #ALLOWED_HOSTS = ['student-performance-prediction-system-05gk.onrender.com']
 
-ALLOWED_HOSTS = ['student-performance-prediction-system-05gk.onrender.com']
+ALLOWED_HOSTS = [
+    'student-performance-prediction-system-05gk.onrender.com',
+    '127.0.0.1',
+    'localhost',
+]
 # CSRF_TRUSTED_ORIGINS = ['https://student-performance-prediction-system-05gk.onrender.com']
 
 
