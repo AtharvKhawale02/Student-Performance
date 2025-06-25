@@ -10,11 +10,13 @@ django-simple-history==3.8.0
 django-tailwind==3.9.0
 djangorestframework==3.16.0
 et_xmlfile==2.0.0
+gunicorn==23.0.0
 idna==3.10
 joblib==1.4.2
 mysqlclient==2.2.7
 numpy==2.2.4
 openpyxl==3.1.5
+packaging==25.0
 pandas==2.2.3
 pillow==11.1.0
 psycopg2-binary==2.9.10
